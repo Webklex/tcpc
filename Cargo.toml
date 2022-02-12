@@ -1,0 +1,14 @@
+[package]
+name = "tcpc"
+version = "0.0.1"
+edition = "2021"
+readme = "README.md"
+license = "MIT"
+description = "A simple, single threaded and minimalistic port checker."
+homepage = "https://github.com/Webklex/tcpc"
+repository = "https://github.com/Webklex/tcpc"
+keywords = ["cli", "port-scanner", "port", "scanner"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+clap = "3.0.14"
