@@ -15,6 +15,8 @@ OPTIONS:
     -m, --max_port <max_port>        Highest port [default: 65535]
     -d, --delay <delay>              Delay between two port checks in seconds [default: 1]
     -t, --timeout <timeout>          Connection timeout in seconds [default: 10]
+    -o, --output <output>            File the output should be written to [default: ]
+    -q, --quiet                      Dont print anything into std
     -V, --version                    Print version information
     -h, --help                       Print help information
 ```

@@ -1,15 +1,58 @@
-use std::thread;
+use std::{fs, thread};
 use std::time::Duration;
-use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
+use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
+use std::fs::{File, OpenOptions};
+use std::io::prelude::*;
+use std::path::Path;
 
 pub(crate) struct Scanner {
     target: String,
+    output_file: String,
     start_port: u16,
     max_port: u16,
+    quiet: bool,
     timeout: Duration,
     delay: Duration,
 }
 
+struct OutputFile {
+    path: String
+}
+
+impl OutputFile {
+
+    //
+    // new
+    // @Description: Build a new OutputFile instance
+    fn new(p: String) -> Self {
+        Self {
+            path: p,
+        }
+    }
+
+    //
+    // write_result
+    // @Description: Build a new file handler
+    fn build_file_handle(self) -> File {
+        let mut file = OpenOptions::new();
+        if Path::new(&self.path).exists() == false {
+            file.create_new(true);
+        }
+        file.write(true)
+            .append(true)
+            .open(&self.path)
+            .unwrap()
+    }
+
+    //
+    // write_result
+    // @Description: Append the given port to the current output file
+    fn write_result(self, p: u16) {
+        if let Err(e) = writeln!(self.build_file_handle(), "{}", p.to_string()) {
+            eprintln!("Couldn't write to file: {}", e);
+        }
+    }
+}
 
 impl Scanner {
 
@@ -19,8 +62,10 @@ impl Scanner {
     pub fn new() -> Self {
         Self {
             target: "".to_string(),
+            output_file: "output.txt".to_string(),
             start_port: 20,
             max_port: 22,
+            quiet: false,
             timeout: Duration::from_secs(10),
             delay: Duration::from_secs(10),
         }
@@ -30,19 +75,49 @@ impl Scanner {
     // start
     // @Description: Start the scanner
     pub fn start(self) {
-        // resolve the target
-        if let Ok(socket_addresses) = format!("{}:0", self.target).to_socket_addrs() {
-            let sockets: Vec<SocketAddr> = socket_addresses.collect();
-            if sockets.is_empty() {
-                return
+        self.prepare_output_file();
+        self.scan();
+    }
+
+    //
+    // prepare_output_file
+    // @Description: Prepare the environment if an output file is wanted
+    fn prepare_output_file(&self) {
+        if self.output_file == "" {
+            return;
+        }
+
+        let p = Path::new(&self.output_file);
+        if p.exists() {
+            self.remove_old_output_file();
+        }else if p.parent().unwrap().exists() == false {
+            match fs::create_dir_all(p.parent().unwrap()) {
+                Ok(_) => {}
+                Err(e) => eprintln!("Couldn't create directory: {}", e)
             }
-            let ip = sockets[0].ip();
+        }
+    }
 
+    //
+    // remove_old_output_file
+    // @Description: Remove the old output file
+    fn remove_old_output_file(&self) {
+        match fs::remove_file(&self.output_file) {
+            Ok(_) => {}
+            Err(e) => eprintln!("Couldn't remove file: {}", e)
+        }
+    }
+
+    //
+    // scan
+    // @Description: Scan the current target with the set port range
+    pub fn scan(self) {
+        // resolve the target
+        if let Some(ip) = self.resolve_target() {
             for port in self.start_port..self.max_port {
-
                 // Check if a connection to a given socket can be established
                 match TcpStream::connect_timeout(&SocketAddr::new(ip.clone(), port), self.timeout) {
-                    Ok(_) => println!("{}", port),
+                    Ok(_) => self.handle_result(port),
                     Err(_) => ()
                 }
 
@@ -55,10 +130,52 @@ impl Scanner {
     }
 
     //
+    // handle_result
+    // @Description: Handle the result if a port has been identified as open
+    fn handle_result(&self, p: u16) {
+        if self.quiet == false {
+            println!("{}", p);
+        }
+        if self.output_file != "" {
+            OutputFile::new(self.output_file.clone()).write_result(p)
+        }
+    }
+
+    //
+    // resolve_target
+    // @Description: Get the resolved target address
+    fn resolve_target(&self) -> Option<IpAddr> {
+        if let Ok(socket_addresses) = format!("{}:0", self.target).to_socket_addrs() {
+            let sockets: Vec<SocketAddr> = socket_addresses.collect();
+            if sockets.is_empty() {
+                return None
+            }
+            return Some(sockets[0].ip());
+        }
+        None
+    }
+
+    //
+    // set_output_file
+    // @Description: Set the scanner output file
+    pub fn set_output_file(&mut self, of: String) -> &mut Self {
+        self.output_file = of;
+        self
+    }
+
+    //
     // set_target
     // @Description: Set the scanner target
     pub fn set_target(&mut self, t: String) -> &mut Self {
         self.target = t;
+        self
+    }
+
+    //
+    // set_quiet
+    // @Description: Set the lowest port to be checked
+    pub fn set_quiet(&mut self, q: bool) -> &mut Self {
+        self.quiet = q;
         self
     }
 
