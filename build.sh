@@ -19,3 +19,9 @@ mkdir -p ${BUILD_DIR}
 cp ./target/release/tcpc ${BUILD_DIR}/tcpc_${VERSION}_linux_amd64
 cp ./target/arm-unknown-linux-gnueabihf/release/tcpc ${BUILD_DIR}/tcpc_${VERSION}_linux_arm
 cp ./target/armv7-unknown-linux-gnueabihf/release/tcpc ${BUILD_DIR}/tcpc_${VERSION}_linux_armv7
+
+cd ${BUILD_DIR}
+zip tcpc_${VERSION}_linux_amd64.zip tcpc_${VERSION}_linux_amd64
+zip tcpc_${VERSION}_linux_arm.zip tcpc_${VERSION}_linux_arm
+zip tcpc_${VERSION}_linux_armv7.zip tcpc_${VERSION}_linux_armv7
+cd -

@@ -5,7 +5,7 @@ use clap::{App, Arg};
 
 fn main() {
     let arguments = App::new("tcpc")
-        .version("1.0.0")
+        .version("1.0.1")
         .about("A simple, single threaded and minimalistic port checker.")
         .arg(
             Arg::new("target")
@@ -96,5 +96,8 @@ fn main() {
         .set_start_port(start_port)
         .set_max_port(max_port);
 
-    s.start()
+    match s.start() {
+        Ok(_) => (),
+        Err(e) => eprintln!("{}", e)
+    }
 }

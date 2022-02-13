@@ -1,6 +1,6 @@
 [package]
 name = "tcpc"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 readme = "README.md"
 license = "MIT"
@@ -12,3 +12,4 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 clap = "3.0.14"
+thiserror = "1.0.30"
