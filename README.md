@@ -17,6 +17,7 @@ OPTIONS:
     -t, --timeout <timeout>          Connection timeout in seconds [default: 10]
     -o, --output <output>            File the output should be written to [default: ]
     -q, --quiet                      Dont print anything into std
+        --socket                     Print the entire socket instead of the port alone
     -V, --version                    Print version information
     -h, --help                       Print help information
 ```

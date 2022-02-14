@@ -30,6 +30,7 @@ pub(crate) struct Scanner {
     start_port: u16,
     max_port: u16,
     quiet: bool,
+    display_socket: bool,
     timeout: Duration,
     delay: Duration,
 }
@@ -61,8 +62,8 @@ impl OutputFile {
     }
 
     /// Append the given port to the current output file
-    fn write_result(self, p: u16) -> Result<(), ScannerError> {
-        match writeln!(self.build_file_handle()?, "{}", p.to_string()) {
+    fn write_result(self, s: String) -> Result<(), ScannerError> {
+        match writeln!(self.build_file_handle()?, "{}", s) {
             Ok(_) => Ok(()),
             Err(e) => Err(ScannerError::WriteFileFailed {
                 error: e.to_string(),
@@ -80,6 +81,7 @@ impl Scanner {
             start_port: 0,
             max_port: 65535,
             quiet: false,
+            display_socket: false,
             timeout: Duration::from_secs(10),
             delay: Duration::from_secs(10),
         }
@@ -156,11 +158,15 @@ impl Scanner {
 
     /// Handle the result if a port has been identified as open
     fn handle_result(&self, p: u16) -> Result<(), ScannerError> {
+        let mut result = p.to_string();
+        if self.display_socket {
+            result = format!("{}:{}", self.target, result);
+        }
         if self.quiet == false {
-            println!("{}", p);
+            println!("{}", result);
         }
         if self.output_file != "" {
-            OutputFile::new(self.output_file.clone()).write_result(p)?
+            OutputFile::new(self.output_file.clone()).write_result(result)?
         }
         Ok(())
     }
@@ -189,9 +195,15 @@ impl Scanner {
         self
     }
 
-    /// Set the lowest port to be checked
+    /// Set the quiet flag
     pub fn set_quiet(&mut self, q: bool) -> &mut Self {
         self.quiet = q;
+        self
+    }
+
+    /// Set the display socket flag
+    pub fn set_display_socket(&mut self, ds: bool) -> &mut Self {
+        self.display_socket = ds;
         self
     }
 

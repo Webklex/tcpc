@@ -5,7 +5,7 @@ use clap::{App, Arg};
 
 fn main() {
     let arguments = App::new("tcpc")
-        .version("1.0.1")
+        .version("1.1.0")
         .about("A simple, single threaded and minimalistic port checker.")
         .arg(
             Arg::new("target")
@@ -61,6 +61,13 @@ fn main() {
                 .required(false)
                 .takes_value(false)
         )
+        .arg(
+            Arg::new("socket")
+                .help("Print the entire socket instead of the port alone")
+                .long("socket")
+                .required(false)
+                .takes_value(false)
+        )
         .setting(clap::AppSettings::ArgRequiredElseHelp)
         .get_matches();
 
@@ -89,6 +96,7 @@ fn main() {
 
     let mut s = scanner::Scanner::new();
     s.set_quiet(arguments.is_present("quiet"))
+        .set_display_socket(arguments.is_present("socket"))
         .set_target(target.to_string())
         .set_output_file(output.to_string())
         .set_timeout(Duration::from_secs(timeout))
