@@ -1,7 +1,7 @@
 use std::{fs, thread};
 use std::time::Duration;
 use std::path::Path;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
 use std::fs::{File, OpenOptions};
 use thiserror::Error;
@@ -143,7 +143,7 @@ impl Scanner {
         while port <= self.max_port {
             // Check if a connection to a given socket can be established
             match TcpStream::connect_timeout(&SocketAddr::new(ip.clone(), port), self.timeout) {
-                Ok(_) => self.handle_result(port)?,
+                Ok(mut stream) => self.handle_result(&mut stream, port)?,
                 Err(_) => ()
             }
 
@@ -157,16 +157,21 @@ impl Scanner {
     }
 
     /// Handle the result if a port has been identified as open
-    fn handle_result(&self, p: u16) -> Result<(), ScannerError> {
-        let mut result = p.to_string();
-        if self.display_socket {
-            result = format!("{}:{}", self.target, result);
-        }
-        if self.quiet == false {
-            println!("{}", result);
-        }
-        if self.output_file != "" {
-            OutputFile::new(self.output_file.clone()).write_result(result)?
+    fn handle_result(&self, s: &mut TcpStream, p: u16) -> Result<(), ScannerError> {
+        match s.read(&mut [0; 1]) {
+            Ok(_) => {
+                let mut result = p.to_string();
+                if self.display_socket {
+                    result = format!("{}:{}", self.target, result);
+                }
+                if self.quiet == false {
+                    println!("{}", result);
+                }
+                if self.output_file != "" {
+                    OutputFile::new(self.output_file.clone()).write_result(result)?
+                }
+            }
+            _ => {}
         }
         Ok(())
     }

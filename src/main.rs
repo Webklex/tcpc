@@ -5,7 +5,7 @@ use clap::{App, Arg};
 
 fn main() {
     let arguments = App::new("tcpc")
-        .version("1.1.0")
+        .version("1.2.0")
         .about("A simple, single threaded and minimalistic port checker.")
         .arg(
             Arg::new("target")
